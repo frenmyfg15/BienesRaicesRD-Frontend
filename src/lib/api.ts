@@ -1,5 +1,5 @@
 import api from './axios'; // Asume que este 'api' es tu instancia de Axios configurada
-import axios, { AxiosError } from 'axios'; // Importar axios y AxiosError para tipado de errores
+import axios from 'axios'; // Importar axios y AxiosError para tipado de errores
 
 // Interfaz para la respuesta de login con Google
 interface GoogleLoginResponse {

@@ -17,20 +17,22 @@ const schema = yup.object({
   password: yup.string().min(6, 'La contraseña debe tener al menos 6 caracteres').required('La contraseña es obligatoria'),
 }).required();
 
+// Definición de tipos para las entradas del formulario
 type LoginFormInputs = {
   email: string;
   password: string;
 };
 
 export default function LoginPage() {
-  const { register: reg, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>({
+  // Renombrado de 'reg' a 'register' para mayor claridad y convención.
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>({
     resolver: yupResolver(schema),
   });
 
   const router = useRouter();
   const { user, isAuthenticated, isLoading, login, loginGoogle } = useAuth();
-  const [isManualSubmitting, setIsManualSubmitting] = useState(false);
-  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [isManualSubmitting, setIsManualSubmitting] = useState<boolean>(false); // Tipado explícito
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState<boolean>(false); // Tipado explícito
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
@@ -42,7 +44,7 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, isLoading, user, router]);
 
-  const onSubmit = async (data: LoginFormInputs) => {
+  const onSubmit = async (data: LoginFormInputs): Promise<void> => { // Tipado de retorno
     setIsManualSubmitting(true);
     try {
       await login(data.email, data.password);
@@ -50,7 +52,9 @@ export default function LoginPage() {
       console.error("Error en inicio de sesión manual:", error);
       let errorMessage = 'Error al iniciar sesión. Por favor, verifica tu correo y contraseña.';
       if (axios.isAxiosError(error) && error.response) {
-        errorMessage = error.response.data?.error || error.response.data?.message || errorMessage;
+        // Acceso seguro a .data para evitar 'any' implícito
+        const responseData = error.response.data as { error?: string; message?: string };
+        errorMessage = responseData.error || responseData.message || errorMessage;
       }
       toast.error(errorMessage);
     } finally {
@@ -58,7 +62,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleSignInSuccess = async (credentialResponse: CredentialResponse) => {
+  const handleGoogleSignInSuccess = async (credentialResponse: CredentialResponse): Promise<void> => { // Tipado de retorno
     setIsGoogleSubmitting(true);
     try {
       await loginGoogle(credentialResponse);
@@ -66,7 +70,9 @@ export default function LoginPage() {
       console.error("Error al iniciar sesión con Google:", error);
       let errorMessage = 'Error al iniciar sesión con Google. Por favor, intenta de nuevo.';
       if (axios.isAxiosError(error) && error.response) {
-        errorMessage = error.response.data?.error || error.response.data?.message || errorMessage;
+        // Acceso seguro a .data para evitar 'any' implícito
+        const responseData = error.response.data as { error?: string; message?: string };
+        errorMessage = responseData.error || responseData.message || errorMessage;
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
@@ -76,7 +82,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleSignInError = () => {
+  const handleGoogleSignInError = (): void => { // Tipado de retorno
     setIsGoogleSubmitting(false);
     toast.error('La autenticación con Google fue cancelada o falló. Por favor, intenta de nuevo.');
   };
@@ -107,7 +113,7 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
-                {...reg("email")}
+                {...register("email")}
                 placeholder="tu@ejemplo.com"
                 className={`w-full p-3 rounded-md border text-grafito placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-oro-arenoso ${errors.email ? 'border-red-500' : 'border-oro-arenoso'}`}
                 aria-invalid={errors.email ? "true" : "false"}
@@ -127,7 +133,7 @@ export default function LoginPage() {
               <input
                 id="password"
                 type="password"
-                {...reg("password")}
+                {...register("password")}
                 placeholder="********"
                 className={`w-full p-3 rounded-md border text-grafito placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-oro-arenoso ${errors.password ? 'border-red-500' : 'border-oro-arenoso'}`}
                 aria-invalid={errors.password ? "true" : "false"}

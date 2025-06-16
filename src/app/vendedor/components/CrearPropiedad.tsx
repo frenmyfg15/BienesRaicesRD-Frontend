@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react'; // Importa useRef
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -8,19 +8,17 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image'; // Importar el componente Image de next/image
 
-// Importa las funciones API necesarias para crear propiedades, subir imágenes y obtener proyectos
 import {
   createPropiedad,
   uploadImage,
-  getProyectos, // Para obtener la lista de proyectos
+  getProyectos,
   PropiedadData,
-  // === CAMBIO CLAVE AQUÍ: De UploadImageResponse a UploadResponse ===
-  UploadResponse, // Cambiado de UploadImageResponse
-  ProyectoResponse // Tipo para la respuesta de un proyecto
+  UploadResponse,
+  ProyectoResponse,
 } from '@/lib/api';
 
-// Esquema de validación para una propiedad
 const propiedadSchema = yup.object().shape({
   nombre: yup.string().required('El nombre de la propiedad es obligatorio.'),
   slug: yup.string()
@@ -43,7 +41,7 @@ const propiedadSchema = yup.object().shape({
     .min(0, 'No puede haber baños negativas.')
     .optional()
     .nullable(),
-  parqueos: yup.number() // Nuevo campo
+  parqueos: yup.number()
     .typeError('Los parqueos deben ser un número entero.')
     .integer('Los parqueos deben ser un número entero.')
     .min(0, 'No puede haber parqueos negativos.')
@@ -57,44 +55,43 @@ const propiedadSchema = yup.object().shape({
   estado: yup.string().required('El estado de la propiedad es obligatorio (ej. "En venta", "Alquiler").'),
   descripcion: yup.string().required('La descripción es obligatoria.').min(20, 'La descripción debe tener al menos 20 caracteres.'),
   ubicacion: yup.string().required('La ubicación es obligatoria.'),
-  nivel: yup.number() // Nuevo campo
+  nivel: yup.number()
     .typeError('El nivel debe ser un número entero.')
     .integer('El nivel debe ser un número entero.')
     .min(0, 'El nivel no puede ser negativo.')
     .optional()
     .nullable(),
-  ascensor: yup.boolean() // Nuevo campo
+  ascensor: yup.boolean()
     .optional()
     .nullable(),
-  amueblado: yup.boolean() // Nuevo campo
+  amueblado: yup.boolean()
     .optional()
     .nullable(),
-  mantenimiento: yup.number() // Nuevo campo
+  mantenimiento: yup.number()
     .typeError('El mantenimiento debe ser un número.')
     .positive('El mantenimiento debe ser un valor positivo.')
     .optional()
     .nullable(),
-  anoConstruccion: yup.number() // Nuevo campo
+  anoConstruccion: yup.number()
     .typeError('El año de construcción debe ser un número entero.')
     .integer('El año de construcción debe ser un número entero.')
     .min(1900, 'El año de construcción es inválido.')
     .max(new Date().getFullYear(), `El año de construcción no puede ser futuro.`)
     .optional()
     .nullable(),
-  gastosLegalesIncluidos: yup.boolean() // Nuevo campo
+  gastosLegalesIncluidos: yup.boolean()
     .optional()
     .nullable(),
-  disponibleDesde: yup.string() // Nuevo campo (string para input type="date")
+  disponibleDesde: yup.string()
     .optional()
     .nullable(),
-  videoUrl: yup.string() // Nuevo campo
+  videoUrl: yup.string()
     .url('Debe ser una URL válida para el video.')
     .optional()
     .nullable(),
-  tipoPropiedad: yup.string() // Nuevo campo (ej. Residencial, Comercial, Turístico)
+  tipoPropiedad: yup.string()
     .optional()
     .nullable(),
-  // === MODIFICACIÓN CLAVE AQUÍ: Las imágenes ahora son un array de File ===
   imagenes: yup.array()
     .of(
       yup.mixed<File>()
@@ -106,17 +103,15 @@ const propiedadSchema = yup.object().shape({
         })
     )
     .min(1, 'Debes subir al menos una imagen.')
-    .required('Debes subir al menos una imagen.'), // Asegura que no sea null/undefined
-  // Campo opcional para asignar a un proyecto
+    .required('Debes subir al menos una imagen.'),
   proyectoId: yup.number()
     .typeError('El ID del proyecto debe ser un número.')
     .integer('El ID del proyecto debe ser un número entero.')
     .positive('El ID del proyecto debe ser un valor positivo.')
     .optional()
-    .nullable(), // Permite que sea nulo si no se asigna a un proyecto
+    .nullable(),
 });
 
-// Interfaz para el tipo de datos de una propiedad que se maneja en el formulario
 interface PropiedadFormData {
   nombre: string;
   slug: string;
@@ -124,40 +119,35 @@ interface PropiedadFormData {
   precio: number;
   habitaciones: number | null;
   baños: number | null;
-  parqueos: number | null; // Nuevo
+  parqueos: number | null;
   metros2: number | null;
   estado: string;
   descripcion: string;
   ubicacion: string;
-  nivel: number | null; // Nuevo
-  ascensor: boolean | null; // Nuevo
-  amueblado: boolean | null; // Nuevo
-  mantenimiento: number | null; // Nuevo
-  anoConstruccion: number | null; // Nuevo
-  gastosLegalesIncluidos: boolean | null; // Nuevo
-  disponibleDesde: string | null; // Nuevo
-  videoUrl: string | null; // Nuevo
-  tipoPropiedad: string | null; // Nuevo
-  // === MODIFICACIÓN CLAVE AQUÍ: Tipo de `imagenes` ahora es `File[]` ===
+  nivel: number | null;
+  ascensor: boolean | null;
+  amueblado: boolean | null;
+  mantenimiento: number | null;
+  anoConstruccion: number | null;
+  gastosLegalesIncluidos: boolean | null;
+  disponibleDesde: string | null;
+  videoUrl: string | null;
+  tipoPropiedad: string | null;
   imagenes: File[];
-  proyectoId: number | null; // ID del proyecto opcional
+  proyectoId: number | null;
 }
 
 const CrearPropiedad: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  // === ESTADOS PARA LA GESTIÓN DE IMÁGENES ===
-  // Almacena los objetos File de las imágenes seleccionadas
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  // Almacena las URLs de previsualización para el display
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  // Referencia al input de tipo 'file' oculto para activarlo programáticamente
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [isUploadingImages, setIsUploadingImages] = useState(false); // Estado de carga de imágenes
-  const [isSavingProperty, setIsSavingProperty] = useState(false); // Estado de guardado de propiedad
-  const [projects, setProjects] = useState<ProyectoResponse[]>([]); // Estado para la lista de proyectos
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isSavingProperty, setIsSavingProperty] = useState(false);
+  const [projects, setProjects] = useState<ProyectoResponse[]>([]);
 
   const {
     register,
@@ -165,12 +155,12 @@ const CrearPropiedad: React.FC = () => {
     formState: { errors, isSubmitting },
     reset,
     watch,
-    setValue, // Usamos setValue para actualizar el campo 'imagenes' en react-hook-form
+    setValue,
   } = useForm<PropiedadFormData>({
     resolver: yupResolver(propiedadSchema),
     defaultValues: {
       estado: 'En venta',
-      imagenes: [], // Asegurarse de que el default sea un array vacío
+      imagenes: [],
       habitaciones: null,
       baños: null,
       parqueos: null,
@@ -190,7 +180,6 @@ const CrearPropiedad: React.FC = () => {
 
   const watchedNombre = watch('nombre');
 
-  // Efecto para generar el slug automáticamente
   useEffect(() => {
     if (watchedNombre) {
       const suggestedSlug = watchedNombre
@@ -205,20 +194,16 @@ const CrearPropiedad: React.FC = () => {
     }
   }, [watchedNombre, setValue]);
 
-  // === EFECTO DE LIMPIEZA DE URLS DE PREVISUALIZACIÓN ===
-  // Revoca los Object URLs cuando el componente se desmonta o las previsualizaciones se resetean.
   useEffect(() => {
     return () => {
       imagePreviews.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [imagePreviews]); // Dependencia: re-ejecuta la limpieza si `imagePreviews` cambia de referencia (ej. un reset total)
+  }, [imagePreviews]);
 
-
-  // Efecto para cargar los proyectos existentes
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await getProyectos(user?.id); // Obtener solo los proyectos del vendedor autenticado
+        const response = await getProyectos(user?.id);
         setProjects(response.proyectos);
       } catch (error) {
         console.error('Error al cargar los proyectos:', error);
@@ -231,116 +216,82 @@ const CrearPropiedad: React.FC = () => {
     }
   }, [isAuthenticated, user]);
 
-
-  // === FUNCIONES DE GESTIÓN DE IMÁGENES ===
-
-  /**
-   * Abre el selector de archivos al hacer clic en el botón "Agregar Imagen".
-   */
-  const handleAddImageClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+  const handleAddImageClick = (): void => {
+    fileInputRef.current?.click();
   };
 
-  /**
-   * Maneja la selección de una imagen individual y la añade al array.
-   * Realiza validación básica de tipo y tamaño de archivo.
-   * @param event El evento de cambio del input de archivo.
-   */
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]; // Solo esperamos un archivo
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0];
 
     if (file) {
-      // Validación cliente-lado: tipo de archivo
       if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
         toast.error('Solo se permiten imágenes (JPEG, PNG, GIF, WebP).');
-        // Limpiar el input para permitir seleccionar de nuevo el mismo archivo si es necesario
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
-      // Validación cliente-lado: tamaño de archivo (5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('Cada imagen debe ser menor a 5MB.');
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
 
-      // Actualiza el estado `imageFiles` con el nuevo archivo
       setImageFiles(prevFiles => {
         const newFiles = [...prevFiles, file];
-        // Actualiza el campo 'imagenes' en react-hook-form para que se valide
-        // === CAMBIO AQUÍ: Pasando 'image' como tipo de archivo para uploadImage ===
         setValue('imagenes', newFiles, { shouldValidate: true, shouldDirty: true });
         return newFiles;
       });
 
-      // Crea y actualiza el estado `imagePreviews` con la URL de previsualización
       const newPreview = URL.createObjectURL(file);
       setImagePreviews(prevPreviews => [...prevPreviews, newPreview]);
     }
 
-    // Limpiar el valor del input de archivo para permitir al usuario seleccionar el mismo archivo de nuevo si lo desea
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  /**
-   * Elimina una imagen del array por su índice.
-   * También revoca la URL de previsualización para liberar memoria.
-   * @param index El índice de la imagen a eliminar.
-   */
-  const handleRemoveImage = (index: number) => {
+  const handleRemoveImage = (index: number): void => {
     setImageFiles(prevFiles => {
       const updatedFiles = prevFiles.filter((_, i) => i !== index);
-      // Actualiza el campo 'imagenes' en react-hook-form
       setValue('imagenes', updatedFiles, { shouldValidate: true, shouldDirty: true });
       return updatedFiles;
     });
 
     setImagePreviews(prevPreviews => {
       const urlToRemove = prevPreviews[index];
-      URL.revokeObjectURL(urlToRemove); // Limpia la URL de previsualización para evitar fugas de memoria
+      URL.revokeObjectURL(urlToRemove);
       return prevPreviews.filter((_, i) => i !== index);
     });
   };
 
-  // === FIN FUNCIONES DE GESTIÓN DE IMÁGENES ===
-
-  const onSubmit = async (data: PropiedadFormData) => {
+  const onSubmit = async (data: PropiedadFormData): Promise<void> => {
     if (!isAuthenticated || !user || user.rol !== 'VENDEDOR') {
       toast.error('No tienes autorización para subir propiedades. Por favor, inicia sesión como vendedor.');
       router.push('/auth/login');
       return;
     }
 
-    // 1. Validar imágenes (ahora `data.imagenes` ya contendrá el array de `File`s gestionado)
     if (data.imagenes.length === 0) {
       toast.error('Debes subir al menos una imagen para la propiedad.');
       return;
     }
 
     setIsUploadingImages(true);
-    const mainToastId = toast.loading('Creando propiedad...'); // Toast principal de carga
+    const mainToastId = toast.loading('Creando propiedad...');
     let uploadedImageUrls: string[] = [];
 
     try {
-      // 2. Subir cada imagen a Cloudinary a través del backend
       toast.loading('Subiendo imágenes a Cloudinary...', { id: mainToastId });
       for (let i = 0; i < data.imagenes.length; i++) {
-        const file = data.imagenes[i]; // `data.imagenes` ahora es el array de `File`s
-        // === CAMBIO CLAVE AQUÍ: Pasando 'image' como tipo de archivo para uploadImage ===
-        const uploadResponse: UploadResponse = await uploadImage(file, 'image'); // Usar UploadResponse
+        const file = data.imagenes[i];
+        const uploadResponse: UploadResponse = await uploadImage(file, 'image');
         uploadedImageUrls.push(uploadResponse.url);
       }
       toast.success('Imágenes subidas exitosamente.', { id: mainToastId });
 
-      // 3. Preparar los datos de la propiedad para enviar al backend
       const formattedSlug = data.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      setValue('slug', formattedSlug); // Ya se hace en useEffect, pero lo mantengo aquí por seguridad
+      setValue('slug', formattedSlug);
 
-      // Convertir 'disponibleDesde' a ISO string si existe
       const disponibleDesdeISO = data.disponibleDesde ? new Date(data.disponibleDesde).toISOString() : null;
 
       const propiedadDataToSend: PropiedadData = {
@@ -365,26 +316,22 @@ const CrearPropiedad: React.FC = () => {
         videoUrl: data.videoUrl,
         tipoPropiedad: data.tipoPropiedad,
         usuarioVendedorId: user.id!,
-        imageUrls: uploadedImageUrls, // Aquí se pasan las URLs subidas
-        // `imagenes` se excluye explícitamente ya que es un File[] y no parte de PropiedadData del backend
+        imageUrls: uploadedImageUrls,
         proyectoId: data.proyectoId || null,
       };
 
-      // 4. Crear la propiedad en el backend
-      setIsSavingProperty(true); // Activa estado de guardado
+      setIsSavingProperty(true);
       toast.loading('Guardando datos de la propiedad...', { id: mainToastId });
       await createPropiedad(propiedadDataToSend);
       toast.success('¡Propiedad creada exitosamente!', { id: mainToastId });
 
-      // Resetear el formulario y la gestión de imágenes
       reset();
-      // Revocar todas las URLs de previsualización que queden antes de limpiar los arrays
       imagePreviews.forEach(url => URL.revokeObjectURL(url));
       setImageFiles([]);
       setImagePreviews([]);
-      router.push('/vendedor/productos'); // Redirige a la página de productos del vendedor
+      router.push('/vendedor/productos');
 
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error al crear propiedad:', error);
       let errorMessage = 'Error al crear propiedad. Intenta de nuevo.';
       if (axios.isAxiosError(error) && error.response) {
@@ -397,8 +344,6 @@ const CrearPropiedad: React.FC = () => {
     }
   };
 
-  // El botón de enviar estará deshabilitado si el formulario está enviando,
-  // subiendo imágenes o guardando la propiedad.
   const isFormDisabled = isSubmitting || isUploadingImages || isSavingProperty;
 
   if (isLoading) {
@@ -419,7 +364,6 @@ const CrearPropiedad: React.FC = () => {
         Crear Nueva Propiedad
       </h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Campo: Nombre de la Propiedad y Slug */}
         <div className="flex flex-wrap -mx-2">
           <div className="w-full md:w-1/2 px-2 mb-4 md:mb-0">
             <label htmlFor="nombre" className="block text-sm font-medium text-grafito mb-1">
@@ -465,7 +409,6 @@ const CrearPropiedad: React.FC = () => {
           </div>
         </div>
 
-        {/* Campo: Tipo de Propiedad y Precio (USD) */}
         <div className="flex flex-wrap -mx-2">
           <div className="w-full md:w-1/2 px-2 mb-4 md:mb-0">
             <label htmlFor="tipo" className="block text-sm font-medium text-grafito mb-1">
@@ -517,7 +460,6 @@ const CrearPropiedad: React.FC = () => {
           </div>
         </div>
 
-        {/* Campo: Habitaciones, Baños y Parqueos */}
         <div className="flex flex-wrap -mx-2">
           <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
             <label htmlFor="habitaciones" className="block text-sm font-medium text-grafito mb-1">
@@ -584,7 +526,6 @@ const CrearPropiedad: React.FC = () => {
           </div>
         </div>
 
-        {/* Campo: Metros Cuadrados (m²), Nivel y Año de Construcción */}
         <div className="flex flex-wrap -mx-2">
           <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
             <label htmlFor="metros2" className="block text-sm font-medium text-grafito mb-1">
@@ -652,7 +593,6 @@ const CrearPropiedad: React.FC = () => {
           </div>
         </div>
 
-        {/* Campo: Estado y Tipo de Propiedad */}
         <div className="flex flex-wrap -mx-2">
           <div className="w-full md:w-1/2 px-2 mb-4 md:mb-0">
             <label htmlFor="estado" className="block text-sm font-medium text-grafito mb-1">
@@ -702,7 +642,6 @@ const CrearPropiedad: React.FC = () => {
           </div>
         </div>
 
-        {/* Campo: Ubicación */}
         <div>
           <label htmlFor="ubicacion" className="block text-sm font-medium text-grafito mb-1">
             Ubicación
@@ -725,7 +664,6 @@ const CrearPropiedad: React.FC = () => {
           )}
         </div>
 
-        {/* Campo: Mantenimiento y Disponible Desde */}
         <div className="flex flex-wrap -mx-2">
           <div className="w-full md:w-1/2 px-2 mb-4 md:mb-0">
             <label htmlFor="mantenimiento" className="block text-sm font-medium text-grafito mb-1">
@@ -771,85 +709,15 @@ const CrearPropiedad: React.FC = () => {
           </div>
         </div>
 
-        {/* Campo: Video URL */}
-        <div>
-          <label htmlFor="videoUrl" className="block text-sm font-medium text-grafito mb-1">
-            URL del Video (Tour Virtual)
-          </label>
-          <input
-            id="videoUrl"
-            type="url"
-            {...register('videoUrl')}
-            placeholder="Ej: https://www.youtube.com/watch?v=..."
-            className={`w-full p-3 rounded-md border text-grafito placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-oro-arenoso transition duration-200 ease-in-out ${
-              errors.videoUrl ? 'border-red-500' : 'border-oro-arenoso'
-            }`}
-            aria-invalid={errors.videoUrl ? "true" : "false"}
-            disabled={isFormDisabled}
-          />
-          {errors.videoUrl && (
-            <p role="alert" className="mt-1 text-sm text-red-600">
-              {errors.videoUrl.message as string}
-            </p>
-          )}
-        </div>
-
-        {/* Checkboxes para Ascensor, Amueblado, Gastos Legales Incluidos */}
-        <div className="flex flex-wrap -mx-2">
-          <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-            <div className="flex items-center p-3 rounded-md border border-oro-arenoso bg-white">
-              <input
-                id="ascensor"
-                type="checkbox"
-                {...register('ascensor')}
-                className="h-5 w-5 text-azul-marino rounded border-gray-300 focus:ring-azul-marino"
-                disabled={isFormDisabled}
-              />
-              <label htmlFor="ascensor" className="ml-2 block text-sm font-medium text-grafito">
-                Ascensor
-              </label>
-            </div>
-          </div>
-          <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-            <div className="flex items-center p-3 rounded-md border border-oro-arenoso bg-white">
-              <input
-                id="amueblado"
-                type="checkbox"
-                {...register('amueblado')}
-                className="h-5 w-5 text-azul-marino rounded border-gray-300 focus:ring-azul-marino"
-                disabled={isFormDisabled}
-              />
-              <label htmlFor="amueblado" className="ml-2 block text-sm font-medium text-grafito">
-                Amueblado
-              </label>
-            </div>
-          </div>
-          <div className="w-full md:w-1/3 px-2">
-            <div className="flex items-center p-3 rounded-md border border-oro-arenoso bg-white">
-              <input
-                id="gastosLegalesIncluidos"
-                type="checkbox"
-                {...register('gastosLegalesIncluidos')}
-                className="h-5 w-5 text-azul-marino rounded border-gray-300 focus:ring-azul-marino"
-                disabled={isFormDisabled}
-              />
-              <label htmlFor="gastosLegalesIncluidos" className="ml-2 block text-sm font-medium text-grafito">
-                Gastos Legales Incluidos
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Campo: Descripción */}
         <div>
           <label htmlFor="descripcion" className="block text-sm font-medium text-grafito mb-1">
-            Descripción Detallada
+            Descripción
           </label>
           <textarea
             id="descripcion"
-            rows={5}
             {...register('descripcion')}
-            placeholder="Describe la propiedad en detalle: sus características, ventajas, entorno, etc."
+            rows={5}
+            placeholder="Introduce una descripción detallada de la propiedad..."
             className={`w-full p-3 rounded-md border text-grafito placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-oro-arenoso transition duration-200 ease-in-out ${
               errors.descripcion ? 'border-red-500' : 'border-oro-arenoso'
             }`}
@@ -863,11 +731,74 @@ const CrearPropiedad: React.FC = () => {
           )}
         </div>
 
-        {/* Campo: Asignar a Proyecto (Opcional) */}
-        {user?.rol === 'VENDEDOR' && projects.length > 0 && (
+        {/* Checkboxes para Amueblado, Ascensor, Gastos Legales Incluidos */}
+        <div className="flex flex-wrap -mx-2 items-center">
+          <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
+            <label htmlFor="amueblado" className="inline-flex items-center cursor-pointer">
+              <input
+                id="amueblado"
+                type="checkbox"
+                {...register('amueblado')}
+                className="form-checkbox h-5 w-5 text-verde-lima rounded-md border-gray-300 focus:ring-oro-arenoso"
+                disabled={isFormDisabled}
+              />
+              <span className="ml-2 text-sm font-medium text-grafito">Amueblado</span>
+            </label>
+          </div>
+          <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
+            <label htmlFor="ascensor" className="inline-flex items-center cursor-pointer">
+              <input
+                id="ascensor"
+                type="checkbox"
+                {...register('ascensor')}
+                className="form-checkbox h-5 w-5 text-verde-lima rounded-md border-gray-300 focus:ring-oro-arenoso"
+                disabled={isFormDisabled}
+              />
+              <span className="ml-2 text-sm font-medium text-grafito">Ascensor</span>
+            </label>
+          </div>
+          <div className="w-full md:w-1/3 px-2">
+            <label htmlFor="gastosLegalesIncluidos" className="inline-flex items-center cursor-pointer">
+              <input
+                id="gastosLegalesIncluidos"
+                type="checkbox"
+                {...register('gastosLegalesIncluidos')}
+                className="form-checkbox h-5 w-5 text-verde-lima rounded-md border-gray-300 focus:ring-oro-arenoso"
+                disabled={isFormDisabled}
+              />
+              <span className="ml-2 text-sm font-medium text-grafito">Gastos Legales Incluidos</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Campo: URL de Video */}
+        <div>
+          <label htmlFor="videoUrl" className="block text-sm font-medium text-grafito mb-1">
+            URL del Video (opcional)
+          </label>
+          <input
+            id="videoUrl"
+            type="url"
+            {...register('videoUrl')}
+            placeholder="Ej: https://youtube.com/watch?v=..."
+            className={`w-full p-3 rounded-md border text-grafito placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-oro-arenoso transition duration-200 ease-in-out ${
+              errors.videoUrl ? 'border-red-500' : 'border-oro-arenoso'
+            }`}
+            aria-invalid={errors.videoUrl ? "true" : "false"}
+            disabled={isFormDisabled}
+          />
+          {errors.videoUrl && (
+            <p role="alert" className="mt-1 text-sm text-red-600">
+              {errors.videoUrl.message as string}
+            </p>
+          )}
+        </div>
+
+        {/* Selector de Proyectos */}
+        {projects.length > 0 && (
           <div>
             <label htmlFor="proyectoId" className="block text-sm font-medium text-grafito mb-1">
-              Asignar a un Proyecto (Opcional)
+              Asignar a Proyecto (Opcional)
             </label>
             <select
               id="proyectoId"
@@ -875,10 +806,11 @@ const CrearPropiedad: React.FC = () => {
               className={`w-full p-3 rounded-md border text-grafito focus:outline-none focus:ring-2 focus:ring-oro-arenoso transition duration-200 ease-in-out ${
                 errors.proyectoId ? 'border-red-500' : 'border-oro-arenoso'
               }`}
+              aria-invalid={errors.proyectoId ? "true" : "false"}
               disabled={isFormDisabled}
             >
-              <option value="">-- No asignar a un proyecto --</option>
-              {projects.map(project => (
+              <option value="">Ningún proyecto (Propiedad individual)</option>
+              {projects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.nombre}
                 </option>
@@ -892,58 +824,62 @@ const CrearPropiedad: React.FC = () => {
           </div>
         )}
 
-        {/* === SECCIÓN DE CARGA DE IMÁGENES (MODIFICADA) === */}
-        <div className="border border-oro-arenoso rounded-lg p-4 bg-white shadow-sm">
-          <label className="block text-lg font-bold text-grafito mb-2">
-            Imágenes de la Propiedad
-          </label>
-          {/* Input de archivo oculto */}
+        {/* Sección de Carga de Imágenes */}
+        <div className="space-y-4 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+          <h3 className="text-lg font-semibold text-grafito">Imágenes de la Propiedad</h3>
           <input
             type="file"
             ref={fileInputRef}
             onChange={handleImageChange}
-            className="hidden" // Oculta el input real
-            accept="image/jpeg, image/png, image/gif, image/webp" // Define los tipos de archivo aceptados
-            // No se usa `register('imagenes')` aquí porque gestionamos los archivos manualmente
-            disabled={isFormDisabled}
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            className="sr-only"
+            disabled={isFormDisabled || isUploadingImages}
+            aria-label="Seleccionar imagen para la propiedad"
           />
-          {/* Botón personalizado para agregar imagen */}
           <button
             type="button"
             onClick={handleAddImageClick}
-            className="w-full px-4 py-3 rounded-md bg-oro-arenoso text-white font-semibold shadow-sm hover:bg-oro-brillante focus:outline-none focus:ring-2 focus:ring-oro-arenoso focus:ring-offset-2 transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isFormDisabled}
+            disabled={isFormDisabled || isUploadingImages}
+            className="w-full bg-azul-marino text-white py-2 px-4 rounded-md hover:bg-azul-marino/90 transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-oro-arenoso focus:ring-offset-2"
           >
             Agregar Imagen
           </button>
-          {/* Mensaje de error de validación de imágenes */}
           {errors.imagenes && (
-            <p role="alert" className="mt-2 text-sm text-red-600">
+            <p role="alert" className="mt-1 text-sm text-red-600">
               {errors.imagenes.message as string}
             </p>
           )}
 
-          {/* Previsualizaciones de Imágenes */}
           {imagePreviews.length > 0 && (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {imagePreviews.map((src, index) => (
-                <div key={index} className="relative rounded-lg overflow-hidden shadow-md group border border-gray-200">
-                  <img
+                <div key={index} className="relative w-full h-32 rounded-md overflow-hidden shadow-md">
+                  <Image
                     src={src}
-                    alt={`Previsualización ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg"
+                    alt={`Previsualización de imagen ${index + 1}`}
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-md"
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                   />
-                  {/* Botón para eliminar imagen */}
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(index)}
-                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 text-xs opacity-80 hover:opacity-100 transition"
                     aria-label={`Eliminar imagen ${index + 1}`}
-                    disabled={isFormDisabled}
+                    disabled={isFormDisabled || isUploadingImages}
                   >
-                    {/* Icono SVG de una 'X' o cruz */}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -951,16 +887,13 @@ const CrearPropiedad: React.FC = () => {
             </div>
           )}
         </div>
-        {/* === FIN SECCIÓN DE CARGA DE IMÁGENES === */}
 
-
-        {/* Botón de Enviar */}
         <button
           type="submit"
-          className="w-full px-6 py-3 rounded-md bg-azul-marino text-white font-semibold text-lg shadow-md hover:bg-azul-oscuro focus:outline-none focus:ring-2 focus:ring-azul-marino focus:ring-offset-2 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={isFormDisabled}
+          className="w-full bg-verde-lima text-grafito font-semibold py-3 px-6 rounded-md hover:bg-verde-lima/90 transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-verde-lima focus:ring-offset-2"
         >
-          {isSavingProperty ? 'Guardando Propiedad...' : isUploadingImages ? 'Subiendo Imágenes...' : 'Crear Propiedad'}
+          {(isUploadingImages || isSavingProperty) ? 'Procesando...' : 'Crear Propiedad'}
         </button>
       </form>
     </div>
