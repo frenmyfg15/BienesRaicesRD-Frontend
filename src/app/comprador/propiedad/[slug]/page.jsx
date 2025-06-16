@@ -12,14 +12,14 @@ import FavoriteButton from '../../components/FavoriteButton'; // Asegúrate de q
 
 
 
-export default async function PropiedadDetailPage({ params }: { params: { slug: any } }) {
+export default async function PropiedadDetailPage(params) {
   const propiedad = await getPropertyBySlug(params.slug);
 
   if (!propiedad) {
     notFound(); // Next.js maneja esto con la página 404 por defecto
   }
 
-  const imageUrls = propiedad.imagenes?.map((img: any) => img.url) || [];
+  const imageUrls = propiedad.imagenes?.map((img) => img.url) || [];
 
   return (
     <main className="max-w-6xl mx-auto px-4 md:px-6 py-12 animate-fade-in-down" role="main">
