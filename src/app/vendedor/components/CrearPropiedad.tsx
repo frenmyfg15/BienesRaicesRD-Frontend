@@ -14,10 +14,9 @@ import {
   createPropiedad,
   uploadImage,
   getProyectos,
-  PropiedadData,
   UploadResponse,
-  ProyectoResponse,
 } from '@/lib/api';
+import { PropiedadData, ProyectoResponse } from '@/app/types/api';
 
 const propiedadSchema = yup.object().shape({
   nombre: yup.string().required('El nombre de la propiedad es obligatorio.'),
@@ -157,7 +156,6 @@ const CrearPropiedad: React.FC = () => {
     watch,
     setValue,
   } = useForm<PropiedadFormData>({
-    resolver: yupResolver(propiedadSchema),
     defaultValues: {
       estado: 'En venta',
       imagenes: [],
@@ -363,7 +361,7 @@ const CrearPropiedad: React.FC = () => {
       <h2 className="text-2xl font-bold text-grafito text-center mb-6">
         Crear Nueva Propiedad
       </h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
         <div className="flex flex-wrap -mx-2">
           <div className="w-full md:w-1/2 px-2 mb-4 md:mb-0">
             <label htmlFor="nombre" className="block text-sm font-medium text-grafito mb-1">

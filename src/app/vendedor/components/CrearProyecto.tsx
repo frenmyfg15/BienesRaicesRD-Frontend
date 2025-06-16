@@ -7,8 +7,9 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { createProyecto, ProyectoData, uploadImage } from '@/lib/api';
+import { createProyecto, uploadImage } from '@/lib/api';
 import axios from 'axios'; // <--- ¡AÑADIDO ESTO! Importa axios para el manejo de errores
+import { ProyectoData } from '@/app/types/api';
 
 // Esquema de validación para un proyecto
 const proyectoSchema = yup.object().shape({
@@ -34,7 +35,7 @@ const proyectoSchema = yup.object().shape({
     .min(1, 'Debes subir al menos una imagen para el proyecto.')
     .required('Debes subir al menos una imagen para el proyecto.'),
   // `videoFile` es el archivo File | null para el video
-  videoFile: yup.mixed<File | null>()
+  videoFile: yup.mixed()
     .nullable()
     .test('fileType', 'Solo se permiten videos (MP4, WebM, Ogg).', (value) => {
       if (!value) return true; // Si no hay archivo, es válido
@@ -98,7 +99,6 @@ const CrearProyecto: React.FC = () => {
     watch,
     trigger, // Importar trigger para validar campos específicos
   } = useForm<ProyectoFormData>({
-    resolver: yupResolver(proyectoSchema),
     defaultValues: {
       estado: 'En construcción',
       imagenesFiles: [], // Default empty array for files
