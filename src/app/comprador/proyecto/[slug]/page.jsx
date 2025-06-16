@@ -17,7 +17,7 @@ import ImageDisplay from '../../components/ImageDisplay'; // Ajusta la ruta si e
 
 
 // Componente principal de la página de detalle del proyecto
-export default async function ProyectoDetailPage({ params }: { params: { slug: any } }) {
+export default async function ProyectoDetailPage({params}) {
   const proyecto = await getProjectBySlug(params.slug);
 
   if (!proyecto) {
@@ -26,8 +26,8 @@ export default async function ProyectoDetailPage({ params }: { params: { slug: a
 
   // Prepara el array de URLs de imágenes para el Client Component ImageDisplay
   const imageUrlsForCarousel = proyecto.imagenes
-    ?.map((img: any) => img.url)
-    .filter((url: any): url is string => typeof url === 'string' && url.trim() !== '') || [];
+    ?.map((img) => img.url)
+    .filter(url => typeof url === 'string' && url.trim() !== '') || [];
 
   return (
     <main className="max-w-6xl mx-auto py-12 px-4 sm:px-8 lg:px-10 bg-white shadow-xl rounded-2xl my-10 space-y-10" role="main">
@@ -160,7 +160,7 @@ export default async function ProyectoDetailPage({ params }: { params: { slug: a
             <div className="mt-6" aria-labelledby="amenities-heading">
               <h3 className="text-lg font-semibold mb-2" id="amenities-heading">Amenidades</h3>
               <div className="flex flex-wrap gap-2">
-                {proyecto.amenidadesProyecto.map((item: any, i: any) => (
+                {proyecto.amenidadesProyecto.map((item, i) => (
                   <span
                     key={i}
                     className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full"
@@ -188,7 +188,7 @@ export default async function ProyectoDetailPage({ params }: { params: { slug: a
         <section className="space-y-4 mt-10" aria-labelledby="project-units-heading">
           <h2 className="text-2xl font-bold text-grafito" id="project-units-heading">Unidades Disponibles en este Proyecto</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {proyecto.propiedades.map((prop: any) => (
+            {proyecto.propiedades.map((prop) => (
               <Link
                 key={prop.id}
                 href={`/comprador/propiedad/${prop.slug}`}
