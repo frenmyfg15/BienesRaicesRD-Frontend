@@ -12,6 +12,15 @@ import axios from 'axios';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 import { CredentialResponse } from '@react-oauth/google';
 
+type RegistroFormInputs = {
+  nombre: string;
+  email: string;
+  password: string;
+  rol: 'COMPRADOR' | 'VENDEDOR';
+  telefono?: string;
+  whatsapp?: string;
+};
+
 const schema = yup.object().shape({
   nombre: yup.string().required('El nombre completo es obligatorio'),
   email: yup.string().email('Correo electrónico inválido').required('El correo electrónico es obligatorio'),
@@ -46,7 +55,7 @@ export default function RegistroPage() {
     }
   }, [isAuthenticated, isLoading, user, router]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: RegistroFormInputs) => {
     try {
       await registerUsuarios(data);
       toast.success('Usuario creado exitosamente. Iniciando sesión...');

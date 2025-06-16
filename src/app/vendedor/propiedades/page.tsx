@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import CrearProyecto from '../components/CrearProyecto'
 import CrearPropiedad from '../components/CrearPropiedad'
 
-export default function page() {
+export default function CrearProductoPage() {
   const [producto, setProducto] = useState<'propiedad' | 'proyecto'>('propiedad')
   return (
     <main className='my-20 justify-center flex flex-col items-center'>

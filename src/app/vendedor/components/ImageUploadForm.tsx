@@ -78,14 +78,13 @@ const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
     <div className="flex flex-col items-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
       <input
         type="file"
-        id="imageUpload" // Agregamos un ID para el label
+        id="imageUpload"
         accept="image/*"
         onChange={handleFileChange}
-        className="hidden" // Oculta el input de archivo por defecto
+        className="hidden"
         disabled={loading}
       />
       
-      {/* Etiqueta personalizada para el input de archivo */}
       <label
         htmlFor="imageUpload"
         className="cursor-pointer bg-azul-marino text-white py-2 px-4 rounded-md hover:bg-azul-marino/90 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-oro-arenoso focus:ring-offset-2"
@@ -111,9 +110,6 @@ const ImageUploadForm: React.FC<ImageUploadFormProps> = ({
         {loading ? 'Subiendo...' : 'Subir Imagen'}
       </button>
 
-      {/* Mensajes de error de Yup si el formulario principal lo usa,
-          pero este componente solo maneja la lógica de subida de archivos */}
-      {/* errors.imagenPrincipalUrl lo manejará el componente padre (FormPropiedadIndependiente) */}
     </div>
   );
 };
