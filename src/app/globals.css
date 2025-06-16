@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer utilities {
+    .bg-azul-marino {
+        background-color: #1A2E3B;
+    }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+    .bg-marfil-suave {
+        background-color: #F9F6F1;
+    }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+    .bg-oro-arenoso {
+        background-color: #D4B28C;
+    }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    .text-grafito {
+        color: #333333;
+    }
+
+    .text-azul-marino {
+        color: #1A2E3B;
+    }
+
+    .border-oro-arenoso {
+        border-color: #D4B28C;
+    }
+
+    .border-azul-marino{
+        border-color: #1A2E3B;
+    }
+
+    /* En tu archivo CSS principal (ej. globals.css) */
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-down {
+        animation: fadeInDown 0.3s ease-out forwards;
+    }
 }
