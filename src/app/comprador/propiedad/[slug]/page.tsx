@@ -12,7 +12,7 @@ import FavoriteButton from '../../components/FavoriteButton'; // Asegúrate de q
 
 
 
-export default async function PropiedadDetailPage({ params }: { params: { slug: string } }) {
+export default async function PropiedadDetailPage({ params }: { params: { slug: any } }) {
   const propiedad = await getPropertyBySlug(params.slug);
 
   if (!propiedad) {

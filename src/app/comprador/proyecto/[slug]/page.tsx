@@ -14,15 +14,10 @@ import { getProjectBySlug } from '@/lib/api';
 // Asumimos que ImageDisplay ya maneja internamente next/image para sus propósitos
 import ImageDisplay from '../../components/ImageDisplay'; // Ajusta la ruta si es diferente
 
-interface ProyectoPageProps {
-  params: {
-    slug: string; // El slug del proyecto vendrá como parámetro de ruta
-  };
-}
 
 
 // Componente principal de la página de detalle del proyecto
-export default async function ProyectoDetailPage({ params }: { params: { slug: string } }) {
+export default async function ProyectoDetailPage({ params }: { params: { slug: any } }) {
   const proyecto = await getProjectBySlug(params.slug);
 
   if (!proyecto) {
