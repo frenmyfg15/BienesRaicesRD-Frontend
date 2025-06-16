@@ -1,27 +1,25 @@
 // src/context/AuthContext.tsx
-'use client'; 
+'use client';
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-// Asegúrate de que 'me' aquí tenga un tipo de retorno claro si es posible
-import { me, loginUsuarios, loginWithGoogle, logout as apiLogout } from '@/lib/api'; 
-import { CredentialResponse } from '@react-oauth/google'; 
-import toast from 'react-hot-toast'; 
+import { me, loginUsuarios, loginWithGoogle, logout as apiLogout } from '@/lib/api';
+import { CredentialResponse } from '@react-oauth/google';
+import toast from 'react-hot-toast';
+import axios from 'axios'; // Importar axios para manejar errores específicos
 
 interface User {
   id: number;
   nombre: string;
   email: string;
   rol: string;
-  // Añade aquí cualquier otra propiedad que tu API devuelva para el usuario
+  // Asegúrate de que esta interfaz incluya todas las propiedades que recibes de tu API para el usuario
 }
 
-// **NUEVA INTERFAZ**: Define la estructura esperada de la respuesta de la API para `me()`
+// Nueva interfaz para la respuesta esperada de `me()`
 interface MeResponse {
   usuario: User;
-  mensaje: string; // Si tu backend envía un mensaje, inclúyelo
-  // ... cualquier otra cosa que `me()` devuelva en `res.data`
+  mensaje?: string;
 }
-
 
 interface AuthContextType {
   user: User | null;
@@ -43,43 +41,71 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true); // Estado de carga inicial
 
-  // **MODIFICACIÓN A loadUser**: Tipado explícito de `data` y dependencias de `useCallback`
+  // Función para guardar el usuario en localStorage
+  const saveUserToLocalStorage = (userData: User | null, authStatus: boolean) => {
+    if (typeof window !== 'undefined') { // Asegurarse de que estamos en el navegador
+      if (userData) {
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('isAuthenticated', 'true');
+      } else {
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+      }
+    }
+  };
+
   const loadUser = useCallback(async () => {
-    console.log("AuthContext: Iniciando loadUser(). isLoading = true.");
+    console.log("AuthContext: Iniciando loadUser().");
     setIsLoading(true);
     try {
-      // **Tipado explícito para la respuesta de `me()`**
-      const data: MeResponse | null = await me(); 
+      // Intentar cargar desde localStorage primero
+      if (typeof window !== 'undefined') {
+        const storedUser = localStorage.getItem('user');
+        const storedAuthStatus = localStorage.getItem('isAuthenticated');
+
+        if (storedUser && storedAuthStatus === 'true') {
+          // Si hay datos en localStorage, intentamos rehidratar
+          const parsedUser: User = JSON.parse(storedUser);
+          // Opcional: Podrías llamar a `me()` aquí para validar el token si tu backend lo requiere
+          // Sin embargo, si `me()` se usa para verificar sesión basada en cookies,
+          // el siguiente bloque `await me()` ya lo hará.
+        }
+      }
+
+      // Luego, siempre intentar validar la sesión con el backend (para cookies, JWT en headers, etc.)
+      const data: MeResponse | null = await me();
 
       if (data && data.usuario) {
         setUser(data.usuario);
         setIsAuthenticated(true);
-        console.log("AuthContext: Usuario cargado exitosamente:", data.usuario);
+        saveUserToLocalStorage(data.usuario, true); // Guardar en localStorage si la sesión es válida
+        console.log("AuthContext: Usuario cargado exitosamente del backend:", data.usuario);
       } else {
         setUser(null);
         setIsAuthenticated(false);
-        console.log("AuthContext: No se pudo cargar el usuario (data o data.usuario es null/undefined).");
+        saveUserToLocalStorage(null, false); // Limpiar localStorage si la sesión no es válida
+        console.log("AuthContext: No se pudo cargar el usuario (sesión inválida o no existe).");
       }
-    } catch (error: any) {
-      console.error("AuthContext: Error al cargar el usuario en me() API:", error.response?.data?.error || error.message);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        // Si la API devuelve 401, significa no autenticado, lo cual es esperado si la sesión expiró
+        console.warn("AuthContext: Sesión expirada o no autorizada (401). Limpiando.");
+      } else {
+        console.error("AuthContext: Error general al cargar el usuario en me() API:", error);
+      }
       setUser(null);
       setIsAuthenticated(false);
+      saveUserToLocalStorage(null, false); // Asegurarse de limpiar localStorage en caso de error
     } finally {
       setIsLoading(false);
       console.log("AuthContext: loadUser() finalizado. isLoading = false.");
-      // **Dependencias en useCallback**: Añade `isAuthenticated` y `user` para que TypeScript entienda que se usan aquí
-      // Aunque en tiempo de ejecución React los "clausura", para TypeScript puede ayudar a la inferencia.
-      // Sin embargo, si estos estados no cambian la lógica del callback, mantener `[]` es idiomático.
-      // Si el error persiste, una prueba sería incluir `isAuthenticated` y `user` aquí.
-      // Por ahora, lo dejaremos como está, pero tenlo en mente si el error vuelve con una estructura similar.
-      console.log("AuthContext: Estado final de autenticación - isAuthenticated:", isAuthenticated, "user:", user);
     }
-  }, []); // Mantener dependencias vacías para este `useCallback` es correcto para su propósito de carga inicial.
+  }, []); // Dependencias: ninguna, ya que esta función gestiona la carga inicial y la persistencia
 
   useEffect(() => {
-    console.log("AuthContext: useEffect disparado al montar/recargar.");
+    console.log("AuthContext: useEffect disparado al montar/recargar para cargar usuario.");
     loadUser();
-  }, [loadUser]);
+  }, [loadUser]); // Se ejecuta una vez al montar, o si loadUser cambia (no debería cambiar si es useCallback sin dependencias)
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -87,13 +113,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await loginUsuarios({ email, password });
       setUser(response.usuario);
       setIsAuthenticated(true);
+      saveUserToLocalStorage(response.usuario, true); // Guardar en localStorage al iniciar sesión
       toast.success(response.mensaje);
       console.log("AuthContext: Login manual exitoso.");
-    } catch (error: any) {
+    } catch (error: unknown) { // Usar unknown para mejor tipado
       console.error("AuthContext: Error al iniciar sesión manual:", error);
-      const errorMessage = error.response?.data?.error || 'Credenciales inválidas.';
+      const errorMessage = (axios.isAxiosError(error) && error.response?.data?.error) || 'Credenciales inválidas.';
       toast.error(errorMessage);
-      throw error; 
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -105,11 +132,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await loginWithGoogle(credentialResponse.credential as string);
       setUser(response.usuario);
       setIsAuthenticated(true);
+      saveUserToLocalStorage(response.usuario, true); // Guardar en localStorage al iniciar sesión con Google
       toast.success(response.mensaje);
       console.log("AuthContext: Login con Google exitoso.");
-    } catch (error: any) {
+    } catch (error: unknown) { // Usar unknown para mejor tipado
       console.error("AuthContext: Error al iniciar sesión con Google:", error);
-      const errorMessage = error.response?.data?.error || 'Error al iniciar sesión con Google.';
+      const errorMessage = (axios.isAxiosError(error) && error.response?.data?.error) || 'Error al iniciar sesión con Google.';
       toast.error(errorMessage);
       throw error;
     } finally {
@@ -120,14 +148,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await apiLogout(); 
-      setUser(null); 
-      setIsAuthenticated(false); 
+      await apiLogout();
+      setUser(null);
+      setIsAuthenticated(false);
+      saveUserToLocalStorage(null, false); // Limpiar localStorage al cerrar sesión
       toast.success('Sesión cerrada correctamente.');
       console.log("AuthContext: Sesión cerrada.");
-    } catch (error) {
+    } catch (error: unknown) { // Usar unknown para mejor tipado
       console.error("AuthContext: Error al cerrar sesión:", error);
-      toast.error('Error al cerrar sesión.');
+      const errorMessage = (axios.isAxiosError(error) && error.response?.data?.error) || 'Error al cerrar sesión.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
