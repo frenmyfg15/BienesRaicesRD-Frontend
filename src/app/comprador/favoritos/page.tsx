@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getFavorites, toggleFavorite, FavoriteResponse } from '@/lib/api'; // Asegúrate de importar FavoriteResponse
+import { getFavorites, toggleFavorite } from '@/lib/api'; // Asegúrate de importar FavoriteResponse
 import { DollarSign, MapPin, Bed, Bath, Ruler, HeartOff, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -11,7 +11,7 @@ import { formatNumberToCurrency } from '@/app/utils/formatNumberToCurrency';
 
 const FavoritosPage: React.FC = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const [favorites, setFavorites] = useState<FavoriteResponse[]>([]);
+  const [favorites, setFavorites] = useState<any[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

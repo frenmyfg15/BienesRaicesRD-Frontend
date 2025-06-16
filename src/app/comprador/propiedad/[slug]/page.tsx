@@ -1,6 +1,5 @@
 // app/comprador/propiedad/[slug]/page.tsx
 
-import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -15,49 +14,6 @@ interface PropiedadPageProps {
   params: { slug: string };
 }
 
-// --- SEO: generateMetadata para metadatos dinámicos ---
-export async function generateMetadata({ params }: PropiedadPageProps): Promise<Metadata> {
-  const propiedad = await getPropertyBySlug(params.slug);
-  if (!propiedad) {
-    return {
-      title: 'Propiedad no encontrada - Inmuebles RD',
-      description: 'La propiedad que buscas no ha sido encontrada.',
-      alternates: {
-        canonical: `https://tuinmobiliaria.com/propiedad/${params.slug}`, // URL canónica
-      },
-    };
-  }
-
-  const imageUrl = propiedad.imagenes?.[0]?.url || 'https://placehold.co/1200x630/cccccc/333333?text=Inmueble+RD';
-  const title = `${propiedad.nombre} en ${propiedad.ubicacion} - Inmuebles RD`;
-  const description = propiedad.descripcion?.slice(0, 160) || `Descubre ${propiedad.nombre}, una impresionante ${propiedad.tipo} con ${propiedad.habitaciones || 'varias'} habitaciones y ${propiedad.baños || 'varios'} baños en ${propiedad.ubicacion}. ¡Encuentra tu hogar ideal!`;
-
-  return {
-    title,
-    description,
-    keywords: [`${propiedad.tipo}`, `${propiedad.ubicacion}`, 'inmobiliaria', 'venta', 'alquiler', 'casa', 'apartamento', 'solar', 'villa', 'República Dominicana', `${propiedad.nombre}`],
-    openGraph: {
-      title,
-      description,
-      url: `https://tuinmobiliaria.com/comprador/propiedad/${propiedad.slug}`, // URL específica para Open Graph
-      siteName: 'Inmuebles RD',
-      images: [{ url: imageUrl, width: 1200, height: 630, alt: `Imagen principal de ${propiedad.nombre}` }],
-      type: 'article', // O 'product' si aplica más
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [imageUrl],
-      creator: '@TuInmobiliariaRD', // O tu handle de Twitter
-    },
-    alternates: {
-      canonical: `https://tuinmobiliaria.com/comprador/propiedad/${propiedad.slug}`, // URL canónica
-    },
-  };
-}
-// --- Fin generateMetadata ---
-
 
 export default async function PropiedadDetailPage({ params }: PropiedadPageProps) {
   const propiedad = await getPropertyBySlug(params.slug);
@@ -66,7 +22,7 @@ export default async function PropiedadDetailPage({ params }: PropiedadPageProps
     notFound(); // Next.js maneja esto con la página 404 por defecto
   }
 
-  const imageUrls = propiedad.imagenes?.map(img => img.url) || [];
+  const imageUrls = propiedad.imagenes?.map((img: any) => img.url) || [];
 
   return (
     <main className="max-w-6xl mx-auto px-4 md:px-6 py-12 animate-fade-in-down" role="main">

@@ -8,7 +8,7 @@ import { notFound } from 'next/navigation';
 import { Building, MapPin, Package, Calendar, ChevronLeft, Phone, Mail, MessageSquare, DollarSign, Bed, Bath, Ruler } from 'lucide-react';
 
 // Importa las funciones de tu API
-import { getProjectBySlug, ProyectoResponse } from '@/lib/api';
+import { getProjectBySlug } from '@/lib/api';
 
 // ¡IMPORTANTE! Importa tu componente ImageDisplay
 // Asumimos que ImageDisplay ya maneja internamente next/image para sus propósitos
@@ -102,8 +102,8 @@ export default async function ProyectoDetailPage({ params }: ProyectoPageProps) 
 
   // Prepara el array de URLs de imágenes para el Client Component ImageDisplay
   const imageUrlsForCarousel = proyecto.imagenes
-    ?.map(img => img.url)
-    .filter((url): url is string => typeof url === 'string' && url.trim() !== '') || [];
+    ?.map((img: any) => img.url)
+    .filter((url: any): url is string => typeof url === 'string' && url.trim() !== '') || [];
 
   return (
     <main className="max-w-6xl mx-auto py-12 px-4 sm:px-8 lg:px-10 bg-white shadow-xl rounded-2xl my-10 space-y-10" role="main">
@@ -236,7 +236,7 @@ export default async function ProyectoDetailPage({ params }: ProyectoPageProps) 
             <div className="mt-6" aria-labelledby="amenities-heading">
               <h3 className="text-lg font-semibold mb-2" id="amenities-heading">Amenidades</h3>
               <div className="flex flex-wrap gap-2">
-                {proyecto.amenidadesProyecto.map((item, i) => (
+                {proyecto.amenidadesProyecto.map((item: any, i: any) => (
                   <span
                     key={i}
                     className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full"
@@ -264,7 +264,7 @@ export default async function ProyectoDetailPage({ params }: ProyectoPageProps) 
         <section className="space-y-4 mt-10" aria-labelledby="project-units-heading">
           <h2 className="text-2xl font-bold text-grafito" id="project-units-heading">Unidades Disponibles en este Proyecto</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {proyecto.propiedades.map((prop) => (
+            {proyecto.propiedades.map((prop: any) => (
               <Link
                 key={prop.id}
                 href={`/comprador/propiedad/${prop.slug}`}

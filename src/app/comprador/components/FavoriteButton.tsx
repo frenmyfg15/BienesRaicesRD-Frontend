@@ -30,7 +30,7 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ itemId, itemType, itemS
     try {
       const { favoritos } = await getFavorites();
       const favorited = favoritos.some(
-        fav => fav.item.id === itemId && fav.type === itemType
+        (fav: any) => fav.item.id === itemId && fav.type === itemType
       );
       setIsFavorited(favorited);
     } catch (error) {
