@@ -20,81 +20,10 @@ interface ProyectoPageProps {
   };
 }
 
-// Generación dinámica de metadatos para SEO
-export async function generateMetadata({ params }: ProyectoPageProps): Promise<Metadata> {
-  const projectSlug = params.slug;
-  const proyecto = await getProjectBySlug(projectSlug);
-
-  if (!proyecto) {
-    return {
-      title: 'Proyecto no encontrado - Inmuebles RD',
-      description: 'El proyecto que buscas no existe o el slug es inválido.',
-      alternates: {
-        canonical: `https://www.tuinmobiliaria.com/comprador/proyecto/${projectSlug}`, // URL canónica
-      },
-    };
-  }
-
-  const title = `${proyecto.nombre} en ${proyecto.ubicacion} - ${proyecto.estado} | Inmuebles RD`;
-  const descriptionSnippet = proyecto.descripcion ? `${proyecto.descripcion.substring(0, 160)}${proyecto.descripcion.length > 160 ? '...' : ''}` : 'Descubre este increíble proyecto inmobiliario en República Dominicana.';
-  const fullDescription = `${descriptionSnippet} Unidades disponibles desde $${proyecto.precioDesde?.toLocaleString('es-DO') || 'N/A'}. Estado actual: ${proyecto.estado}. Ubicado en ${proyecto.ubicacion}.`;
-
-  const imageUrl = proyecto.imagenDestacada || 'https://placehold.co/1200x630/cccccc/333333?text=Inmuebles+RD+Proyecto';
-
-  // Combinar palabras clave relevantes
-  const keywords = [
-    'proyecto inmobiliario',
-    proyecto.ubicacion,
-    proyecto.estado,
-    'inversión',
-    'apartamentos',
-    'casas', // Añadir tipos de propiedades comunes
-    'lujo', // Si aplica
-    'pre-venta', // Si aplica
-    'construcción', // Si aplica
-    'República Dominicana',
-    proyecto.nombre,
-    // Puedes añadir más palabras clave basadas en amenidades o características específicas del proyecto
-    ...(proyecto.amenidadesProyecto || []),
-  ].filter(Boolean).map(kw => typeof kw === 'string' ? kw.toLowerCase() : '').join(', ');
-
-
-  return {
-    title,
-    description: fullDescription,
-    keywords: keywords,
-    openGraph: {
-      title,
-      description: fullDescription,
-      url: `https://www.tuinmobiliaria.com/comprador/proyecto/${proyecto.slug}`,
-      siteName: 'Inmuebles RD',
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: `Imagen principal del proyecto ${proyecto.nombre}`,
-        },
-      ],
-      type: 'article', // O 'product' si el proyecto se vende como un todo
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description: fullDescription,
-      images: [imageUrl],
-      creator: '@TuInmobiliariaRD', // Reemplaza con tu handle de Twitter
-    },
-    alternates: {
-      canonical: `https://www.tuinmobiliaria.com/comprador/proyecto/${proyecto.slug}`,
-    },
-  };
-}
 
 // Componente principal de la página de detalle del proyecto
-export default async function ProyectoDetailPage({ params }: ProyectoPageProps) {
-  const projectSlug = params.slug;
-  const proyecto = await getProjectBySlug(projectSlug);
+export default async function ProyectoDetailPage({ params }: { params: { slug: string } }) {
+  const proyecto = await getProjectBySlug(params.slug);
 
   if (!proyecto) {
     notFound(); // Next.js maneja esto con la página 404 por defecto

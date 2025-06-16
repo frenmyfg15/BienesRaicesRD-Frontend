@@ -10,12 +10,9 @@ import { getPropertyBySlug } from '@/lib/api';
 import ImageDisplay from '../../components/ImageDisplay';
 import FavoriteButton from '../../components/FavoriteButton'; // Asegúrate de que este componente sea 'use client' si usa hooks de React
 
-interface PropiedadPageProps {
-  params: { slug: string };
-}
 
 
-export default async function PropiedadDetailPage({ params }: PropiedadPageProps) {
+export default async function PropiedadDetailPage({ params }: { params: { slug: string } }) {
   const propiedad = await getPropertyBySlug(params.slug);
 
   if (!propiedad) {
