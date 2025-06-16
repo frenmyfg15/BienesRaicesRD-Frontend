@@ -1,5 +1,4 @@
 // app/comprador/catalogo/page.tsx
-'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
