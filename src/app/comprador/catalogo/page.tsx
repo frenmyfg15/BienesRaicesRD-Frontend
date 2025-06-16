@@ -1,4 +1,5 @@
 // app/comprador/catalogo/page.tsx
+'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
@@ -17,36 +18,6 @@ import axios from 'axios';
 import { Bed, Bath, X, SlidersHorizontal, MapPin, Ruler, CarFront, Heart } from 'lucide-react'; // Añadido Heart para el icono de favoritos
 import { useAuth } from '@/context/AuthContext';
 
-// --- SEO: Metadata estática para la página ---
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Catálogo de Propiedades y Proyectos en República Dominicana - Tu Inmobiliaria',
-  description: 'Descubre casas, apartamentos, locales comerciales, solares y villas en venta y alquiler en República Dominicana. Encuentra tu próxima inversión inmobiliaria o el hogar de tus sueños con nuestros filtros avanzados.',
-  keywords: ['inmobiliaria', 'propiedades', 'proyectos', 'venta', 'alquiler', 'casa', 'apartamento', 'solar', 'villa', 'República Dominicana'],
-  openGraph: {
-    title: 'Catálogo de Propiedades y Proyectos en República Dominicana - Tu Inmobiliaria',
-    description: 'Descubre casas, apartamentos, locales comerciales, solares y villas en venta y alquiler en República Dominicana.',
-    url: 'https://tuinmobiliaria.com/comprador/catalogo', // Reemplaza con tu dominio real
-    siteName: 'Tu Inmobiliaria',
-    images: [
-      {
-        url: 'https://tuinmobiliaria.com/images/opengraph-catalogo.jpg', // Imagen para Open Graph
-        width: 1200,
-        height: 630,
-        alt: 'Catálogo de Propiedades en República Dominicana',
-      },
-    ],
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Catálogo de Propiedades y Proyectos en República Dominicana - Tu Inmobiliaria',
-    description: 'Descubre casas, apartamentos, locales comerciales, solares y villas en venta y alquiler en República Dominicana.',
-    images: ['https://tuinmobiliaria.com/images/twitter-catalogo.jpg'], // Imagen para Twitter Card
-  },
-};
-// --- Fin Metadata ---
 
 export default function CatalogoPage() {
   const searchParams = useSearchParams();
