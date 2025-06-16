@@ -17,15 +17,10 @@ export const me = async () => {
     const res = await api.get('/api/me', { withCredentials: true });
     return res.data;
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      // No loguear ni lanzar error: el usuario simplemente no está autenticado
-      return null;
-    }
-    console.error('Error real en /api/me:', error);
+    console.error("Error al obtener información del usuario:", error);
     return null;
   }
 };
-
 
 export const loginWithGoogle = async (idToken: string) => {
   try {
