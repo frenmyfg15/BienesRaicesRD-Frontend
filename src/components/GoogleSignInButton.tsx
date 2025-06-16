@@ -36,12 +36,11 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         <GoogleLogin
           onSuccess={handleSuccess}
           onError={handleError}
-          text={text}
+          text='continue_with'
           size="large"
           theme="outline"
           shape="rectangular"
           width="200px"
-          disabled={disabled} // <--- Aplicamos la prop disabled aquí al componente de la librería
         />
       </div>
     </GoogleOAuthProvider>
