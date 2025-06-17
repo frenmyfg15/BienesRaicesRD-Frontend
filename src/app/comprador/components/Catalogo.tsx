@@ -3,31 +3,30 @@
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation'; // Importa useRouter
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   getProyectos,
   getPublicProperties,
-  toggleFavorite, // Importa la función para alternar favoritos
-  getFavorites,   // Importa la función para obtener favoritos
+  toggleFavorite,
+  getFavorites,
 } from '@/lib/api';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { Bed, Bath, X, SlidersHorizontal, MapPin, Ruler, CarFront } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext'; // Importa useAuth para verificar la sesión
-import { PropiedadResponse, ProyectoResponse } from '@/app/types/api';
+import { useAuth } from '@/context/AuthContext';
+import { PropiedadResponse, ProyectoResponse } from '@/app/types/api'; // Asegúrate de que esta ruta sea correcta
 
 export default function Catalogo() {
   const searchParams = useSearchParams();
-  const router = useRouter(); // Inicializa useRouter
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth(); // Obtiene el estado de autenticación
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [proyectos, setProyectos] = useState<ProyectoResponse[]>([]);
   const [propiedades, setPropiedades] = useState<PropiedadResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Nuevo estado para los IDs de los favoritos del usuario
-  const [userFavorites, setUserFavorites] = useState<Set<string>>(new Set()); // Usamos Set<string> para IDs como 'propiedad_1', 'proyecto_5'
+  const [userFavorites, setUserFavorites] = useState<Set<string>>(new Set());
 
   const [tipoSeleccionado, setTipoSeleccionado] = useState<string | null>(
     searchParams.get('tipo') || null
@@ -47,7 +46,6 @@ export default function Catalogo() {
   const toggleFiltro = () => setFiltroVisible(!filtroVisible);
   const cerrarFiltro = () => setFiltroVisible(false);
 
-  // Función para cargar los datos del catálogo (proyectos y propiedades)
   const fetchCatalogData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -73,32 +71,27 @@ export default function Catalogo() {
     }
   }, []);
 
-  // Función para cargar los favoritos del usuario
   const fetchUserFavorites = useCallback(async () => {
     if (!isAuthenticated || !user) {
-      setUserFavorites(new Set()); // Limpiar favoritos si no hay usuario autenticado
+      setUserFavorites(new Set());
       return;
     }
     try {
       const { favoritos: fetchedFavorites } = await getFavorites();
       const newFavoritesSet = new Set<string>();
       fetchedFavorites.forEach((fav: any) => {
-        // Usar un formato consistente para la clave: "tipo_id"
         newFavoritesSet.add(`${fav.type}_${fav.item.id}`);
       });
       setUserFavorites(newFavoritesSet);
     } catch (err) {
       console.error('Error al cargar favoritos del usuario:', err);
-      // No mostramos un toast de error aquí para no ser intrusivos en la carga inicial
     }
   }, [isAuthenticated, user]);
 
-  // Efecto para cargar datos del catálogo y favoritos al inicio
   useEffect(() => {
     fetchCatalogData();
   }, [fetchCatalogData]);
 
-  // Efecto para cargar favoritos cuando el estado de autenticación termina de cargar
   useEffect(() => {
     if (!authLoading) {
       fetchUserFavorites();
@@ -187,28 +180,26 @@ export default function Catalogo() {
     setUbicacionFiltro('');
   };
 
-  // Función actualizada para alternar favoritos
   const handleToggleFavorite = async (e: React.MouseEvent, itemId: number, itemType: 'propiedad' | 'proyecto') => {
-    e.preventDefault(); // Previene la navegación
-    e.stopPropagation(); // Detiene la propagación del evento para no activar el Link
+    e.preventDefault();
+    e.stopPropagation();
 
     if (!isAuthenticated) {
       toast.error('Debes iniciar sesión para guardar favoritos.');
-      router.push('/auth/login?redirect=/comprador/catalogo'); // Redirige y mantiene la URL actual para después
+      router.push('/auth/login?redirect=/comprador/catalogo');
       return;
     }
 
     const key = `${itemType}_${itemId}`;
     const isCurrentlyFavorited = userFavorites.has(key);
 
-    // Optimistic UI update: Actualiza la UI antes de la respuesta del servidor
     const prevUserFavorites = new Set(userFavorites);
     if (isCurrentlyFavorited) {
       userFavorites.delete(key);
     } else {
       userFavorites.add(key);
     }
-    setUserFavorites(new Set(userFavorites)); // Crear nueva instancia para forzar re-render
+    setUserFavorites(new Set(userFavorites));
 
     try {
       const response = await toggleFavorite(itemId, itemType);
@@ -217,11 +208,7 @@ export default function Catalogo() {
       } else {
         toast.success(`${itemType === 'propiedad' ? 'Propiedad' : 'Proyecto'} eliminado de favoritos.`);
       }
-      // No es necesario volver a llamar fetchUserFavorites si la actualización optimista es suficiente,
-      // pero si quieres asegurar la consistencia, puedes descomentar la línea de abajo.
-      // fetchUserFavorites(); 
     } catch (err: any) {
-      // Revertir UI si hay un error
       setUserFavorites(prevUserFavorites);
       console.error(`Error al alternar favorito para ${itemType} ID ${itemId}:`, err);
       const errorMessage = err.message || 'Error al actualizar favoritos. Intenta de nuevo.';
@@ -251,7 +238,6 @@ export default function Catalogo() {
           className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-azul-marino focus:border-azul-marino text-sm"
         />
       </div>
-
 
       {/* Tipo de Inmueble/Proyecto */}
       <h3 className="text-md font-semibold text-grafito mt-4 mb-2 border-b pb-2">Tipo</h3>
@@ -356,7 +342,7 @@ export default function Catalogo() {
     </div>
   );
 
-  if (loading || authLoading) { // Añade authLoading a la condición de carga
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-grafito p-6">
         <p className="text-xl animate-pulse">Cargando catálogo...</p>
@@ -434,14 +420,31 @@ export default function Catalogo() {
                 const habitaciones = !isProyecto ? item.habitaciones : null;
                 const baños = !isProyecto ? item.baños : null;
                 const metros2 = !isProyecto ? item.metros2 : null;
-                const parqueos = !isProyecto ? item.parqueos : null; // Nuevo campo
+                const parqueos = !isProyecto ? item.parqueos : null;
                 const itemId = item.id;
                 const itemType: 'propiedad' | 'proyecto' = isProyecto ? 'proyecto' : 'propiedad';
                 const isFavorited = userFavorites.has(`${itemType}_${itemId}`);
 
                 return (
                   <Link key={index} href={url} className="relative block overflow-hidden rounded-xl bg-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                    {/* ... Proyecto badge, favoritos ... */}
+                    {/* Botón de favoritos dentro de la tarjeta */}
+                    <button
+                      onClick={(e) => handleToggleFavorite(e, itemId, itemType)}
+                      className={`absolute top-3 right-3 p-2 rounded-full shadow-md transition-all duration-200
+                        ${isFavorited ? 'bg-red-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-100'}
+                      `}
+                      aria-label={isFavorited ? 'Eliminar de favoritos' : 'Añadir a favoritos'}
+                    >
+                      {isFavorited ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                      )}
+                    </button>
+
+                    {isProyecto && (
+                      <span className="absolute top-3 left-3 bg-azul-oscuro text-white text-xs font-semibold px-2 py-1 rounded-full shadow-md">Proyecto</span>
+                    )}
                     <img src={imagen} alt={`Imagen de ${nombre}`} className="w-full h-40 object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/800x450/cccccc/333333?text=Sin+imagen'; }} />
                     <div className="p-3">
                       <h3 className="text-base font-semibold text-grafito mb-1">{nombre}</h3>
