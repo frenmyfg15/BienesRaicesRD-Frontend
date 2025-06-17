@@ -1,29 +1,91 @@
-// app/comprador/propiedad/[slug]/page.tsx
-
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+
 import {
   Bed, Bath, DollarSign, Ruler, Phone, Mail, MessageSquare, MapPin, Tag, UserCircle2,
-  Car, Building, ArrowUpSquare, Home, Calendar, CheckSquare, Film, Sparkles, Heart // Añadido Heart si se usa para el FavoriteButton aquí (aunque lo manejas en el componente)
+  Car, Building, ArrowUpSquare, Home, Calendar, CheckSquare, Film, Sparkles, Heart
 } from 'lucide-react';
+
 import { getPropertyBySlug } from '@/lib/api';
 import ImageDisplay from '../../components/ImageDisplay';
-import FavoriteButton from '../../components/FavoriteButton'; // Asegúrate de que este componente sea 'use client' si usa hooks de React
+import FavoriteButton from '../../components/FavoriteButton';
 
-
-
-export default async function PropiedadDetailPage({params}) {
+export async function generateMetadata({ params }) {
   const propiedad = await getPropertyBySlug(params.slug);
 
   if (!propiedad) {
-    notFound(); // Next.js maneja esto con la página 404 por defecto
+    return {
+      title: "Propiedad No Encontrada | Bienes Raices RD",
+      description: "La propiedad que buscas no ha sido encontrada en Bienes Raices RD.",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const imageUrl = propiedad.imagenes?.[0]?.url || 'https://placehold.co/1200x630/003366/FFFFFF?text=Bienes+Raices+RD';
+  const pageUrl = `https://bienes-raices-rd-frontend-9gbu.vercel.app/comprador/propiedad/${propiedad.slug}`;
+
+  return {
+    title: `${propiedad.nombre} en ${propiedad.ubicacion} | Bienes Raices RD`,
+    description: propiedad.descripcion || `Detalles sobre ${propiedad.nombre} en ${propiedad.ubicacion}. Descubre su precio, habitaciones, baños y características en Bienes Raices RD.`,
+    keywords: [
+      `${propiedad.nombre.toLowerCase()}`,
+      `${propiedad.ubicacion.toLowerCase()}`,
+      `${propiedad.tipo.toLowerCase()} en ${propiedad.ubicacion.toLowerCase()}`,
+      `${propiedad.estado.toLowerCase()}`,
+      "propiedad en venta rd",
+      "apartamento alquiler santo domingo",
+      "casa republica dominicana",
+      "bienes raices rd",
+      "inmuebles rd",
+      "comprar propiedad rd",
+    ],
+    metadataBase: new URL('https://bienes-raices-rd-frontend-9gbu.vercel.app'),
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      title: `${propiedad.nombre} | ${propiedad.ubicacion} | Bienes Raices RD`,
+      description: propiedad.descripcion || `Descubre ${propiedad.nombre} en ${propiedad.ubicacion}. Detalles de precio, habitaciones y más.`,
+      url: pageUrl,
+      siteName: "Bienes Raices RD",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: `Imagen principal de ${propiedad.nombre}`,
+        },
+      ],
+      locale: 'es_DO',
+      type: 'article',
+      publishedTime: propiedad.createdAt,
+      modifiedTime: propiedad.updatedAt,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${propiedad.nombre} | ${propiedad.ubicacion} | Bienes Raices RD`,
+      description: propiedad.descripcion || `Explora ${propiedad.nombre} en ${propiedad.ubicacion}. Encuentra todos los detalles aquí.`,
+      images: [imageUrl],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
+
+
+export default async function PropiedadDetailPage({ params }) {
+  const propiedad = await getPropertyBySlug(params.slug);
+
+  if (!propiedad) {
+    notFound();
   }
 
   const imageUrls = propiedad.imagenes?.map((img) => img.url) || [];
 
   return (
     <main className="max-w-6xl mx-auto px-4 md:px-6 py-12 animate-fade-in-down" role="main">
-      {/* Título y ubicación */}
       <header className="text-center mb-12">
         <h1 className="text-4xl font-bold text-grafito" id="propiedad-title">{propiedad.nombre}</h1>
         <p className="text-lg text-gray-500 mt-2 flex justify-center items-center gap-2">
@@ -33,12 +95,13 @@ export default async function PropiedadDetailPage({params}) {
         </p>
       </header>
 
-      {/* Galería principal y el botón de favoritos */}
       <div className="shadow-md rounded-xl overflow-hidden mb-10 relative">
-        {/* Asume que ImageDisplay internamente usa next/image con props width, height, quality, sizes */}
-        <ImageDisplay imageUrls={imageUrls} altText={`Galería de imágenes de ${propiedad.nombre}`} />
+        <ImageDisplay 
+          imageUrls={imageUrls} 
+          altText={`Galería de imágenes de ${propiedad.nombre}`}
+          videoUrl={propiedad.videoUrl || null} 
+        />
         
-        {/* FavoriteButton debe ser un componente cliente ('use client') si usa estado o hooks */}
         <FavoriteButton
           itemId={propiedad.id}
           itemType="propiedad"
@@ -46,7 +109,6 @@ export default async function PropiedadDetailPage({params}) {
         />
       </div>
 
-      {/* Proyecto relacionado */}
       {propiedad.proyecto && (
         <section className="shadow-md p-6 rounded-2xl mb-12" aria-labelledby="proyecto-heading">
           <h2 className="text-2xl font-semibold text-grafito mb-4" id="proyecto-heading">Proyecto Asociado</h2>
@@ -61,9 +123,7 @@ export default async function PropiedadDetailPage({params}) {
         </section>
       )}
 
-      {/* Detalles y descripción */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-        {/* Detalles */}
         <div className="shadow-md p-6 rounded-2xl" aria-labelledby="detalles-heading">
           <h2 className="text-2xl font-semibold text-grafito mb-4" id="detalles-heading">Detalles de la Propiedad</h2>
           <ul className="space-y-4 text-base text-gray-700" role="list">
@@ -158,7 +218,6 @@ export default async function PropiedadDetailPage({params}) {
           </ul>
         </div>
 
-        {/* Descripción */}
         <div className="shadow-md p-6 rounded-2xl" aria-labelledby="descripcion-heading">
           <h2 className="text-2xl font-semibold text-grafito mb-4" id="descripcion-heading">Descripción</h2>
           <p className="text-gray-700 text-base leading-relaxed whitespace-pre-wrap">
@@ -167,7 +226,6 @@ export default async function PropiedadDetailPage({params}) {
         </div>
       </div>
 
-      {/* Tarjeta del agente */}
       <section className="shadow-md p-6 rounded-2xl mb-12 flex flex-col md:flex-row items-center md:items-start gap-6" aria-labelledby="agente-heading">
         <UserCircle2 size={60} className="text-gray-600" aria-hidden="true" />
         <div>
@@ -180,7 +238,6 @@ export default async function PropiedadDetailPage({params}) {
         </div>
       </section>
 
-      {/* Formulario de contacto */}
       <section className="shadow-md p-6 rounded-2xl mb-20" aria-labelledby="contacto-form-heading">
         <h2 className="text-2xl font-semibold text-grafito mb-4 text-center" id="contacto-form-heading">¿Te interesa esta propiedad?</h2>
         <form className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto" aria-label="Formulario de contacto para la propiedad">
@@ -196,7 +253,6 @@ export default async function PropiedadDetailPage({params}) {
         </form>
       </section>
 
-      {/* Opciones de contacto rápidas */}
       <section className="shadow-md p-6 rounded-2xl mb-8 text-center" aria-labelledby="contacto-rapido-heading">
         <h3 className="text-xl font-semibold text-grafito mb-4" id="contacto-rapido-heading">Si lo prefieres, contáctanos vía:</h3>
         <div className="flex flex-wrap justify-center gap-4">
@@ -216,7 +272,7 @@ export default async function PropiedadDetailPage({params}) {
           </a>
           {propiedad.usuarioVendedor.whatsapp && (
             <a
-              href={`https://wa.me/${propiedad.usuarioVendedor.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola! Estoy interesado en la propiedad: ${propiedad.nombre} (${propiedad.ubicacion})`)}`}
+              href={`https://wa.me/${typeof propiedad.usuarioVendedor.whatsapp === 'string' ? propiedad.usuarioVendedor.whatsapp.replace(/\D/g, '') : ''}?text=${encodeURIComponent(`Hola! Estoy interesado en la propiedad: ${propiedad.nombre} (${propiedad.ubicacion})`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-green-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-green-700 transition"

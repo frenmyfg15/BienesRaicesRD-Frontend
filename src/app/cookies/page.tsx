@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const metadata = {
-  title: "Política de Cookies | Brillo Hogar",
+  title: "Política de Cookies | Bienes Raices RD",
   description: "Consulta nuestra política de cookies. Actualmente no utilizamos cookies, pero mantenemos el compromiso con tu privacidad.",
 };
 
@@ -12,7 +12,7 @@ export default function PoliticaCookies() {
 
       <section className="space-y-6 text-sm md:text-base leading-relaxed">
         <p>
-          En <strong>Brillo Hogar</strong> valoramos tu privacidad y transparencia. Por eso, te informamos que actualmente <strong>no utilizamos cookies propias ni de terceros</strong> en nuestro sitio web.
+          En <strong>Bienes Raices RD</strong> valoramos tu privacidad y transparencia. Por eso, te informamos que actualmente <strong>no utilizamos cookies propias ni de terceros</strong> en nuestro sitio web.
         </p>
 
         <h2 className="text-xl font-semibold">¿Qué son las cookies?</h2>

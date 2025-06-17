@@ -32,7 +32,7 @@ export default function CookiesBanner() {
       <div className="w-10 h-10 relative shrink-0">
         <Image
           src={logo}
-          alt="Logotipo Brillo Hogar"
+          alt="Logotipo Bienes Raices RD"
           fill
           className="object-contain"
         />
@@ -40,7 +40,7 @@ export default function CookiesBanner() {
 
       <div className="flex-1 text-sm md:text-base text-gray-700">
         <p className="mb-3">
-          En <strong>Brillo Hogar</strong> utilizamos cookies para mejorar tu experiencia, ofrecer servicios personalizados y analizar el uso del sitio.{' '}
+          En <strong>Bienes Raices RD</strong> utilizamos cookies para mejorar tu experiencia, ofrecer servicios personalizados y analizar el uso del sitio.{' '}
           <Link href="/cookies" className="text-cyan-600 underline hover:text-cyan-800">
             Ver política de cookies
           </Link>.

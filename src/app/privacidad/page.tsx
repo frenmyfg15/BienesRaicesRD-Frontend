@@ -1,8 +1,8 @@
 import React from 'react';
 
 export const metadata = {
-  title: "Política de Privacidad | Brillo Hogar",
-  description: "Conoce cómo Brillo Hogar protege tus datos personales de forma segura y transparente.",
+  title: "Política de Privacidad | Bienes Raices RD",
+  description: "Conoce cómo Bienes Raices RD protege tus datos personales de forma segura y transparente.",
 };
 
 export default function PoliticaPrivacidad() {
@@ -12,12 +12,12 @@ export default function PoliticaPrivacidad() {
       
       <section className="space-y-6 text-sm md:text-base leading-relaxed">
         <p>
-          En <strong>Brillo Hogar</strong>, nos comprometemos a proteger tu privacidad y garantizar que tus datos personales sean tratados de forma segura, confidencial y de acuerdo con la legislación vigente, incluyendo el Reglamento General de Protección de Datos (RGPD).
+          En <strong>Bienes Raices RD</strong>, nos comprometemos a proteger tu privacidad y garantizar que tus datos personales sean tratados de forma segura, confidencial y de acuerdo con la legislación vigente, incluyendo el Reglamento General de Protección de Datos (RGPD).
         </p>
 
         <h2 className="text-xl font-semibold">1. Responsable del tratamiento</h2>
         <p>
-          <strong>Nombre comercial:</strong> Brillo Hogar<br />
+          <strong>Nombre comercial:</strong> Bienes Raices RD<br />
           <strong>Teléfono:</strong> 617 547 481<br />
           <strong>Correo electrónico:</strong> info@brillohogar.com<br />
           <strong>Dirección:</strong> Valdemoro, Madrid, España

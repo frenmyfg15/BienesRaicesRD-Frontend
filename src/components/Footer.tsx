@@ -11,7 +11,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-10 text-center md:text-left">
         {/* Logo y descripción */}
         <div className="flex flex-col items-center md:items-start">
-          <Image src={logo} alt="Brillo Hogar Logo" width={80} height={80} className="mb-4" />
+          <Image src={logo} alt="Bienes Raices RD Logo" width={80} height={80} className="mb-4" />
           <p className="text-sm">
             Venta y alquileres de bienes raices en República Dominicana, gente de confianza y visión.
           </p>
