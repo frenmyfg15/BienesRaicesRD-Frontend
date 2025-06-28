@@ -114,6 +114,15 @@ export async function getPropertyBySlug(slug: string) {
   }
 }
 
+export const AllSlugProperties = async () => {
+  try {
+    const res  = await api.get('/api/propiedades/slug/propiedad/all');
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export const updatePropiedad = async (id: number, data: any) => {
   const res = await api.put(`/api/propiedades/${id}`, data);
   return res.data;
@@ -164,6 +173,15 @@ export async function getProjectBySlug(slug: string) {
     }
     console.error(`Error al cargar el proyecto con slug '${slug}':`, error);
     throw error;
+  }
+}
+
+export const AllSlugProjects = async () => {
+  try {
+    const res  = await api.get('/api/proyectos/slug/proyecto/all');
+    return res.data;
+  } catch (error) {
+    console.log(error);
   }
 }
 
